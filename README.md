@@ -35,4 +35,18 @@ code and checkword (sandbox first) and your monthly account number.
 Built from SF's published open platform documentation and tested on recorded answers;
 **unverified** against the sandbox until an account's keys are at hand.
 
+## Responsibility
+
+This package is an independent, unofficial client: it is not affiliated with, endorsed by or
+sponsored by S.F. Express (SF Holding Co., Ltd.). It reaches their service on behalf of whoever runs
+it, and it does not redistribute their data beyond the short excerpts recorded as test fixtures. Its
+MIT licence covers this package's code only and grants no right to the service or to its data.
+
+Whoever installs and runs this package is responsible for complying with SF Express's terms (those
+of its open platform, accepted on registration:
+[open.sf-express.com](https://open.sf-express.com/)), for obtaining whatever they require (an
+account, a key, a licence or subscription, an attribution or a citation, a rate limit to respect),
+and for any use made of what it returns. The authors publish it free of charge, make no commercial
+use of it, and accept no liability for how it is used (see [LICENSE](LICENSE)).
+
 License: MIT since 2026-10-09; earlier versions remain published under LGPL-3.0-or-later.
