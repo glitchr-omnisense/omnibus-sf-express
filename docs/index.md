@@ -113,6 +113,9 @@ No route is ever `PENDING` or `AVAILABLE_FOR_PICKUP`.
 waybill and as `orderId`: `true` when `resStatus` is `2` (or absent). The order was created under
 the shipment's reference, not under its waybill number (see "Verified, and not").
 
+> [!WARNING]
+> Known defect: the cancellation sends the waybill number as `orderId`, where the order was created under the shipment's reference or a random id: the cancellation cannot reach the order as written.
+
 ## Example
 
 ```php
