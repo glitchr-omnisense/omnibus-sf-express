@@ -1,6 +1,6 @@
 # omnibus/sf-express
 
-SF Express (顺丰速运) for [omniscient/omnibus](https://github.com/glitchr-studio/omnibus): orders
+SF Express (顺丰速运) for [omnisense/omnibus](https://github.com/glitchr-omnisense/omnibus): orders
 with their waybills and cloud-printed labels, tracking and cancellation, through SF's open
 platform. SF quotes by contract: prices come from the `rates` option. Every call is a form `POST`
 to one endpoint, `https://bspgw.sf-express.com/std/service` (live) or
@@ -18,7 +18,7 @@ to one endpoint, `https://bspgw.sf-express.com/std/service` (live) or
 composer require omnibus/sf-express
 ```
 
-Requires PHP 8.2, `omniscient/omnibus` (2.x) and `symfony/http-client` (6.4, 7 or 8); given no
+Requires PHP 8.2, `omnisense/omnibus` (2.x) and `symfony/http-client` (6.4, 7 or 8); given no
 HTTP client, the factory makes one with `HttpClient::create()`. In a Symfony application with
 `Omnibus\Bridge\Symfony\OmnibusBundle`, the factory is registered as soon as the package is
 installed.
@@ -42,7 +42,7 @@ with a 20-second timeout.
 | `checkword` | string | - | yes | the checkword that signs every call |
 | `monthly_card` | ?string | `null` | no | the monthly account that pays; not sent when unset |
 | `sandbox` | bool | `false` | no | `true`: the sandbox endpoint |
-| `rates` | list | - | no | the only way this gateway rates ([the rates option](https://github.com/glitchr-studio/omnibus/blob/2.x/docs/configuration.md#the-rates-option)) |
+| `rates` | list | - | no | the only way this gateway rates ([the rates option](https://github.com/glitchr-omnisense/omnibus/blob/2.x/docs/configuration.md#the-rates-option)) |
 
 Shipment options read when booking (`Shipment::$options`):
 

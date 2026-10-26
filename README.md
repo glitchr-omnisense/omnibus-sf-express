@@ -1,6 +1,6 @@
 # omnibus/sf-express
 
-SF Express (顺丰速运) for [omniscient/omnibus](https://github.com/glitchr-studio/omnibus): orders
+SF Express (顺丰速运) for [omnisense/omnibus](https://github.com/glitchr-omnisense/omnibus): orders
 with their waybills and labels (EXP_RECE_CREATE_ORDER, cloud print), tracking
 (EXP_RECE_SEARCH_ROUTES) and cancellation (EXP_RECE_UPDATE_ORDER) - the open platform's signed
 API. Prices come from configuration (`rates`): SF quotes by contract.
@@ -9,7 +9,7 @@ API. Prices come from configuration (`rates`): SF quotes by contract.
 $gateway = (new SfExpressGatewayFactory($http))->create($options);   // $http: the application's HTTP client - none given, the factory makes its own; the options below
 ```
 
-No framework needed: the package requires `omniscient/omnibus` and `symfony/http-client`. In a
+No framework needed: the package requires `omnisense/omnibus` and `symfony/http-client`. In a
 Symfony application, the same through the bundle's configuration:
 
 ```yaml
