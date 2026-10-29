@@ -89,7 +89,9 @@ The tracking number is the first waybill number. Then `COM_RECE_CLOUD_PRINT_WAYB
 `content`, its `url` the label's `url`. When the print call fails, the booking still succeeds
 without a document. The format is `application/pdf`; `trackingUrl` is
 `https://www.sf-express.com/chn/sc/waybill/waybill-detail/<number>`. A response without a waybill
-is a `CarrierException` (`SF Express issued no waybill.`). `pickupPoint` is not sent.
+is a `CarrierException` (`SF Express issued no waybill.`). `pickupPoint` is not sent. The label's
+`carrierReference` is the `orderId` the order was created under (the shipment's `reference`, else
+the generated `omnibus-<hex>`): what `cancel()` takes.
 
 **Track.** `EXP_RECE_SEARCH_ROUTES` by waybill number, in Chinese when the locale starts with
 `zh`, else in English. The routes of the first answer: `acceptTime` read in `Asia/Shanghai`, the
@@ -109,12 +111,10 @@ status is the latest route's, read in this order:
 
 No route is ever `PENDING` or `AVAILABLE_FOR_PICKUP`.
 
-**Cancel.** `EXP_RECE_UPDATE_ORDER` with `dealType` 2 and the waybill number, sent both as the
-waybill and as `orderId`: `true` when `resStatus` is `2` (or absent). The order was created under
-the shipment's reference, not under its waybill number (see "Verified, and not").
-
-> [!WARNING]
-> Known defect: the cancellation sends the waybill number as `orderId`, where the order was created under the shipment's reference or a random id: the cancellation cannot reach the order as written.
+**Cancel.** `EXP_RECE_UPDATE_ORDER` with `dealType` 2 and the value given as `orderId`: pass the
+label's `carrierReference` (or the shipment's `reference`, which it is when there was one), not
+the waybill number, which SF does not know as an order. `true` when `resStatus` is `2` (or
+absent).
 
 ## Example
 
@@ -152,7 +152,7 @@ echo $label->trackingNumber, ' ', $label->trackingUrl, "\n";
 $tracking = $sf->track($label->trackingNumber, 'zh');
 echo $tracking->status->value, ' ', $tracking->latest()?->location, "\n";
 
-var_dump($sf->cancel($label->trackingNumber));
+var_dump($sf->cancel($label->carrierReference));   // the order id, not the waybill
 ```
 
 In Symfony:
@@ -193,14 +193,16 @@ A failed print call after the order is created is not raised (above). A missing 
 Tested offline: `Tests/SfExpressGatewayTest.php` (the digest; an order created with its waybill
 and label, the partner id, the signature, the monthly card, the express type, the province from
 the third street line, the contact types; tracking with its statuses and location; the
-cancellation; a refused call raised with its code) and `Tests/SfExpressContractTest.php`, the
+cancellation by the order id the order was created under, the label's `carrierReference`, with or
+without a shipment reference; a refused call raised with its code) and `Tests/SfExpressContractTest.php`, the
 family's conformance suite on recorded answers. The example above was run in the core's harness on
 those recorded answers.
 
 Not verified: the README and the factory mark the package **unverified** against the sandbox
 until an account's keys are at hand; it is built from SF's published open platform documentation.
-The cancellation sends the waybill number as `orderId`, while the order was created under the
-shipment's `reference` (or a generated id): whether SF accepts it is unchecked.
+The cancellation by `orderId` alone follows SF's documentation of EXP_RECE_UPDATE_ORDER (the
+customer order number is the order's key, the waybill list optional); not yet checked on the
+sandbox.
 
 ## Responsibility
 

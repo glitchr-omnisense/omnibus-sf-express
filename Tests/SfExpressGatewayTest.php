@@ -81,4 +81,28 @@ final class SfExpressGatewayTest extends TestCase
             self::assertSame('A1002', $e->carrierCode);
         }
     }
+
+    /**
+     * EXP_RECE_UPDATE_ORDER (open.sf-express.com, 订单确认/取消接口) names the order by its orderId,
+     * the customer order number EXP_RECE_CREATE_ORDER was sent; dealType 2 cancels it. The label
+     * keeps that orderId in its carrierReference, which cancel() takes.
+     */
+    public function testTheOrderIsCancelledByTheOrderIdItWasCreatedUnder(): void
+    {
+        $gateway = $this->gateway();
+        $label = $gateway->ship(self::shipment());
+        self::assertSame('ORDER-1042', $label->carrierReference);
+        self::assertTrue($gateway->cancel($label->carrierReference));
+        $cancel = end($this->calls);
+        self::assertSame('EXP_RECE_UPDATE_ORDER', $cancel['serviceCode']);
+        self::assertSame('ORDER-1042', $cancel['msg']['orderId']);
+        self::assertSame(2, $cancel['msg']['dealType']);
+        self::assertArrayNotHasKey('waybillNoInfoList', $cancel['msg'], 'the waybill is not the order');
+
+        $this->calls = [];
+        $s = self::shipment();
+        $label = $gateway->ship(new Shipment($s->sender, $s->recipient, $s->parcels));
+        self::assertStringStartsWith('omnibus-', (string) $label->carrierReference);
+        self::assertSame($this->calls[0]['msg']['orderId'], $label->carrierReference, 'without a reference: the id the order was created under');
+    }
 }

@@ -62,7 +62,7 @@ final class ShippingAction implements ActionInterface, ApiAwareInterface
             }
         } catch (CarrierException) {
         }
-        $request->setResult(new Label('sf_express', $number, $content, Label::PDF, $url, 'https://www.sf-express.com/chn/sc/waybill/waybill-detail/'.rawurlencode($number)));
+        $request->setResult(new Label('sf_express', $number, $content, Label::PDF, $url, 'https://www.sf-express.com/chn/sc/waybill/waybill-detail/'.rawurlencode($number), $orderId));
     }
 
     private static function contact(Address $a, int $type): array
