@@ -3,6 +3,7 @@
 namespace Omnibus\SfExpress;
 
 use Omnibus\Exception\CarrierException;
+use Omnibus\Http\Redaction;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -46,20 +47,22 @@ final class Api
             $status = $response->getStatusCode();
             $envelope = json_decode($response->getContent(false), true);
         } catch (HttpExceptionInterface|\JsonException $e) {
-            throw new CarrierException('sf_express', 'SF Express request failed: '.$e->getMessage(), null, $e);
+            $secrets = $this->secrets();
+
+            throw Redaction::withoutArguments(new CarrierException('sf_express', 'SF Express request failed: '.Redaction::text($e->getMessage(), $secrets), null, Redaction::copy($e, $secrets)));
         }
         if ($status >= 400 || !\is_array($envelope)) {
-            throw new CarrierException('sf_express', sprintf('SF Express answered HTTP %d.', $status));
+            throw Redaction::withoutArguments(new CarrierException('sf_express', sprintf('SF Express answered HTTP %d.', $status)));
         }
         if ('A1000' !== ($envelope['apiResultCode'] ?? null)) {
-            throw new CarrierException('sf_express', (string) ($envelope['apiErrorMsg'] ?? 'SF Express refused the call.'), isset($envelope['apiResultCode']) ? (string) $envelope['apiResultCode'] : null);
+            throw Redaction::withoutArguments(new CarrierException('sf_express', (string) ($envelope['apiErrorMsg'] ?? 'SF Express refused the call.'), isset($envelope['apiResultCode']) ? (string) $envelope['apiResultCode'] : null));
         }
         $result = json_decode((string) ($envelope['apiResultData'] ?? '{}'), true);
         if (!\is_array($result)) {
-            throw new CarrierException('sf_express', 'SF Express answered with a result that is not JSON.');
+            throw Redaction::withoutArguments(new CarrierException('sf_express', 'SF Express answered with a result that is not JSON.'));
         }
         if (isset($result['success']) && !$result['success']) {
-            throw new CarrierException('sf_express', (string) ($result['errorMsg'] ?? 'SF Express refused the request.'), isset($result['errorCode']) ? (string) $result['errorCode'] : null);
+            throw Redaction::withoutArguments(new CarrierException('sf_express', (string) ($result['errorMsg'] ?? 'SF Express refused the request.'), isset($result['errorCode']) ? (string) $result['errorCode'] : null));
         }
 
         return $result['msgData'] ?? $result;
@@ -68,5 +71,15 @@ final class Api
     public static function digest(string $msgData, string $timestamp, string $checkword): string
     {
         return base64_encode(md5(urlencode($msgData.$timestamp.$checkword), true));
+    }
+
+    /**
+     * What a failure must not carry: the credentials, and what a request made of them.
+     *
+     * @return list<string>
+     */
+    private function secrets(string ...$more): array
+    {
+        return [$this->checkword, ...$more];
     }
 }
