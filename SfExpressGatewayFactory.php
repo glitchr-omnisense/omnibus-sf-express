@@ -26,13 +26,14 @@ final class SfExpressGatewayFactory extends GatewayFactory
         $config->defaults([
             'omnibus.factory_name' => 'sf_express',
             'omnibus.factory_title' => 'SF Express',
+            'omnibus.policy' => __DIR__.'/policy.json',
             'omnibus.required_options' => ['partner_id', 'checkword'],
             'monthly_card' => null,
             'sandbox' => false,
             'omnibus.api' => function (Config $c) {
                 $http = $this->http ?? HttpClient::create();
 
-                return new Api($http, (string) $c['partner_id'], (string) $c['checkword'], $c['monthly_card'] ?: null, (bool) $c['sandbox']);
+                return new Api($http, (string) $c['partner_id'], (string) $c['checkword'], $c['monthly_card'] ?: null, (bool) $c['sandbox'], backoff: $c->backoff());
             },
             'omnibus.action.shipping' => new ShippingAction(),
             'omnibus.action.tracking' => new TrackingAction(),

@@ -6,6 +6,7 @@ use Omnibus\Action\ActionInterface;
 use Omnibus\Action\ApiAwareInterface;
 use Omnibus\Action\ApiAwareTrait;
 use Omnibus\Exception\CarrierException;
+use Omnibus\Exception\UsageLimitReachedException;
 use Omnibus\Model\Address;
 use Omnibus\Model\Label;
 use Omnibus\Request\Request;
@@ -60,7 +61,8 @@ final class ShippingAction implements ActionInterface, ApiAwareInterface
             if (isset($file['content']) && \is_string($file['content'])) {
                 $content = base64_decode($file['content']);
             }
-        } catch (CarrierException) {
+        } catch (CarrierException|UsageLimitReachedException) {
+            // The shipment is booked: a label held by the carrier's wait is fetched later, as a failed one.
         }
         $request->setResult(new Label('sf_express', $number, $content, Label::PDF, $url, 'https://www.sf-express.com/chn/sc/waybill/waybill-detail/'.rawurlencode($number), $orderId));
     }

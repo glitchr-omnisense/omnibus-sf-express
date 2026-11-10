@@ -4,6 +4,8 @@ namespace Omnibus\SfExpress;
 
 use Omnibus\Exception\CarrierException;
 use Omnibus\Http\Redaction;
+use Omnibus\Http\Throttle;
+use Omnisense\Contracts\Policy\Backoff;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -24,6 +26,8 @@ final class Api
         public readonly ?string $monthlyCard = null,
         public readonly bool $sandbox = false,
         private readonly int $timeout = 20,
+        /** The waits the carrier asks for (omnisense/contracts' Backoff): no call while one lasts, a 429 a RateLimitedException, never retried */
+        private readonly ?Backoff $backoff = null,
     ) {
     }
 
@@ -33,6 +37,7 @@ final class Api
         $msgData = json_encode($data, \JSON_UNESCAPED_UNICODE | \JSON_THROW_ON_ERROR);
         $timestamp = (string) (int) (microtime(true) * 1000);
         try {
+            Throttle::before($this->backoff);
             $response = $this->http->request('POST', $this->sandbox ? self::TEST : self::LIVE, [
                 'body' => [
                     'partnerID' => $this->partnerId,
@@ -45,6 +50,7 @@ final class Api
                 'timeout' => $this->timeout,
             ]);
             $status = $response->getStatusCode();
+            Throttle::after($this->backoff, 'sf_express', $status, $response->getHeaders(false));
             $envelope = json_decode($response->getContent(false), true);
         } catch (HttpExceptionInterface|\JsonException $e) {
             $secrets = $this->secrets();
