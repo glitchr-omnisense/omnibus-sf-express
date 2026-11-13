@@ -5,6 +5,43 @@ with their waybills and labels (EXP_RECE_CREATE_ORDER, cloud print), tracking
 (EXP_RECE_SEARCH_ROUTES) and cancellation (EXP_RECE_UPDATE_ORDER) - the open platform's signed
 API. Prices come from configuration (`rates`): SF quotes by contract.
 
+## Install and a first call
+
+```sh
+composer require omnibus/sf-express
+```
+
+No account for this first call: SF Express's answer is recorded
+(`Omnibus\Testing\RecordedHttpClient` answers in place of the API), so nothing leaves the process.
+With your own credentials, give the factory your HTTP client (or none: it makes its own) and drop
+the recorded one.
+
+```php
+<?php
+
+require __DIR__.'/vendor/autoload.php';
+
+use Omnibus\SfExpress\SfExpressGatewayFactory;
+use Omnibus\Testing\RecordedHttpClient;
+
+// SF Express's answer, recorded: no account, and nothing leaves the process.
+$http = new RecordedHttpClient([
+    'body:serviceCode=EXP_RECE_SEARCH_ROUTES' => ['apiResultCode' => 'A1000', 'apiResultData' => json_encode(['success' => true, 'errorCode' => 'S0000', 'msgData' => ['routeResps' => [
+        ['mailNo' => 'SF1234567890123', 'routes' => [['acceptTime' => '2026-10-02 11:30:00', 'acceptAddress' => '北京市', 'remark' => '已签收，感谢使用顺丰', 'opCode' => '80']]],
+    ]]], JSON_UNESCAPED_UNICODE)],
+]);
+$gateway = (new SfExpressGatewayFactory($http))->create(['partner_id' => 'GLITCH01', 'checkword' => 'cw', 'monthly_card' => '7551234567', 'sandbox' => true]);
+
+$tracking = $gateway->track('SF1234567890123');
+echo $tracking->status->value, ' - ', $tracking->latest()?->description, "\n";   // delivered - 已签收，感谢使用顺丰
+```
+
+A real call needs a SF Express account (the credentials below). **Unverified**: the request and
+answer shapes come from SF Express's published documentation, and the package has not been run
+against its service.
+
+## Configuration
+
 ```php
 $gateway = (new SfExpressGatewayFactory($http))->create($options);   // $http: the application's HTTP client - none given, the factory makes its own; the options below
 ```
